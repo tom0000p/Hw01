@@ -1,0 +1,265 @@
+<html>
+<head>
+<style>
+#info {
+position: absolute;
+top: 0px;
+width: 100%;
+padding: 10px;
+text-align: center;
+color: #ffff00
+}
+
+body {
+overflow: hidden;
+}
+
+</style>
+</head>
+<body>
+
+<div id="info">Hw2
+</div>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
+<script src="http://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+
+
+<script src="https://dl.dropboxusercontent.com/u/3587259/Code/Threejs/OrbitControls.js"></script>
+
+
+<script>
+var controls, keyboard = new KeyboardState();
+
+
+
+var power = 0;
+    
+    
+var camera, scene, renderer;
+var satellite, angle = 0;
+var mousePoint;
+var mouse = new THREE.Vector2();
+//var stats;
+var pos, vel, force, go, back;
+var clock = new THREE.Clock();
+var ball;
+var planeP = new THREE.Vector3(10, 0, 0);
+var planeN = new THREE.Vector3(0, 1, 0);
+
+var ballR = 3;
+init();
+animate();
+//myclamp(x,lo,hi);
+
+//update();
+
+function init() {
+    renderer = new THREE.WebGLRenderer({
+                                       antialias: true
+                                       });
+    
+    pos = new THREE.Vector3(-20, 40, 0);
+    vel = new THREE.Vector3(0, 0, 0);
+    //force = new THREE.Vector3(0, -90, 0);
+    
+    
+    /*
+     // STATS
+     stats = new Stats();
+     stats.domElement.style.position = 'absolute';
+     stats.domElement.style.top = '0px';
+     stats.domElement.style.zIndex = 100;
+     document.body.appendChild( stats.domElement );
+     */
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x33CCFF);
+    document.body.appendChild(renderer.domElement);
+    
+    scene = new THREE.Scene();
+    camera = new THREE.OrthographicCamera(-50, 50, 50, -50, -10, 100);
+    camera.position.z = 10;
+    scene.add(camera);
+    
+    // what's in the scene? [depth]
+    // bordere (blue lines) [0]
+    // satellite (white circle) [1]
+    // mousePoint (red circle) [2]
+    // background (dark yellow quad) [3]
+    //
+    // all on XY plane: rely on polygonOffset to sort things out
+    // line object remains at frontmost
+    
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ball = new THREE.Mesh(new THREE.CircleGeometry(ballR, 60), new THREE.MeshBasicMaterial({
+                                                                                           color: 0xFFFF00
+                                                                                           }));
+    scene.add(ball);
+    ball.position.y = 30;
+    
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 50), new THREE.MeshBasicMaterial({
+                                                                                              color: 0xff0000
+                                                                                              }));                                                              
+    var ground2 = new THREE.Mesh(new THREE.PlaneGeometry(100, 50), new THREE.MeshBasicMaterial({
+                                                                                              color: 0xff00ff
+                                                                                              }));
+    var ground3 = new THREE.Mesh(new THREE.PlaneGeometry(100, 50), new THREE.MeshBasicMaterial({
+                                                                                              color: 0xff0f00             
+                                                                                              }));
+    var wallr = new THREE.Mesh(new THREE.PlaneGeometry(50, 100), new THREE.MeshBasicMaterial({
+                                                                                              color: 0x000000            
+                                                                                              }));
+
+    //scene.add(background);
+    //background.position.y = 0;
+    var walll = wallr.clone();
+    scene.add(wallr);
+    scene.add(walll);
+    wallr.position.x = 150;
+    wallr.position.y = 0;
+    walll.position.x = -150
+    walll.position.y = 0;
+    
+    scene.add(ground);
+    scene.add(ground2);
+    scene.add(ground3);
+    ground2.position.y = -25;
+    ground2.position.x = 100;
+    ground.position.y = -25;
+    ground3.position.x = -100;
+    ground3.position.y = -25;
+    
+    window.addEventListener('resize', onWindowResize, false);
+    //  window.addEventListener('mousedown', onDocumentMouseDown, false);
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    var dt = clock.getDelta();
+    
+    // force: add gravity first
+    force = new THREE.Vector3(0, -90, 0);
+	if (pos.y <= ballR) {    // if contact, add contact force
+        force.add(new THREE.Vector3(0, 90, 0));
+	}  
+    
+    // then do Euler's
+    /*
+    vel.add(force.clone().multiplyScalar(dt));
+    pos.add(vel.clone().multiplyScalar(dt));
+    ball.position.copy(pos);
+    
+    */
+    // collision
+    // if (x-p).n < 0 then hit
+    /*
+     if (pos.clone().sub(planeP).dot(planeN) < 0) {
+     pos.y = 30;
+     vel.set (0,0,0);
+     }
+     */
+    // bounce back
+    //camera.position.x += 0.08;
+    
+    if (pos.y <= ballR) {
+        //pos.y = 0;
+        vel.y *= -.8;
+       // camera.position.x += 0.1;
+        //document.write( pos.y);
+    }
+    
+    keyboard.update();
+    if (keyboard.pressed("up") && (pos.y <= ballR) )
+    {/*
+        if(vel.x >0)
+            camera.position.x += 25;
+        else if(vel.x <0)
+                camera.position.x -= 25;
+                */
+        vel.y = 100;
+        vel.y *= 0.8;
+        //camera.position.x += 1;
+
+    }
+    if (keyboard.pressed("right") && (pos.y <= ballR) )
+    {
+        //vel.x *= 0.8;
+        //pos.x ++;
+        //force.add(new THREE.Vector3(45, 0, 0));
+        vel.x = 7;
+        vel.x *= 0.8;
+        /*
+        if(pos.x >= 25)
+            camera.position.x += 0.5;
+*/
+    }
+            if( (vel.x > 1 && vel.x > 0) || (vel.x < -1 && vel.x < 0) )
+                vel.x *= 0.99;
+            else if(vel.x <1 && vel.x > -1)
+                vel.x = 0;
+    /*
+    if(keyboard.up("right"))
+    {
+        for(var i = 0; i< 45; i++)
+            force.add(new THREE.Vector3(-1, 0, 0));
+    }
+   */
+    //force.add(new THREE.Vector3(-45, 0, 0));
+    
+     if (keyboard.pressed("left") && (pos.y <= ballR) )
+    {
+        //pos.x --;
+        vel.x = -7;
+        vel.x *= 0.8;
+        //camera.position.x -= 0.5;
+    }
+    
+    if (keyboard.pressed("space") )
+    {
+        //pos.x --;
+        pos.x -= 1;
+        camera.position.x -= 0.5;
+    }
+
+    if (keyboard.pressed("home") )
+    {
+        document.write( pos.x);
+    }
+    
+    if(ball.position.x - camera.position.x >= 25)
+       camera.position.x += 0.07;
+    if(camera.position.x - ball.position.x >= 25)
+       camera.position.x -= 0.07;
+       
+     if(pos.x >= 122)
+     {
+         vel.x = -20;  
+     }
+     else if(pos.x <= -122)
+     {
+         vel.x = 20;
+     }
+
+    vel.add(force.clone().multiplyScalar(dt));
+    pos.add(vel.clone().multiplyScalar(dt));
+    ball.position.copy(pos);
+    
+    requestAnimationFrame(animate);
+    render();
+}
+
+
+function render() {
+    renderer.render(scene, camera);
+}
+
+
+</script>
+
+</body>
+
+</html>

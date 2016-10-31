@@ -60,7 +60,7 @@ var power = 0;
 
 init(); 
 animate();
-
+myclamp(x,lo,hi);
 
 
 
@@ -157,6 +157,8 @@ function myclamp(x,lo,hi)
 	if (x > hi) return hi;
 	return x;
 }
+
+
 
 function update()
 {
